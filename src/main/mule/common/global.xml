@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+	<http:listener-config name="fakestore-uniqlo-exp-wrapper-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="fakestore-uniqlo-exp-wrapper-api-config" api="resource::706f4d0a-e4a3-40fb-8365-ae5ac1f0a8d7:fakestore-uniqlo-exp-wrapper-api:1.0.0:raml:zip:fakestore-uniqlo-exp-wrapper-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<http:request-config name="Uniqlo_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="b5a5cdbb-f8da-418b-b8d1-637319c4ccd9" >
+		<http:request-connection host="${fakestoreuniqloapi.host}" port="${fakestoreuniqloapi.port}" />
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="4e180f77-3775-425f-aea5-69f8cbf340b4" file="config/${mule.env}.yaml" />
+	<api-gateway:autodiscovery apiId="${app.appId}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="6252f8d0-22d2-4c71-b476-299bf773d70e" flowRef="fakestore-uniqlo-exp-wrapper-api-main" />
+	<http:request-config name="Client_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="6ac99c6c-f902-4d5a-b6c5-bd2215063cdb" >
+		<http:request-connection host="${fakestoreuniqloapi.host2}" port="${fakestoreuniqloapi.port}" />
+	</http:request-config>
+	<error-handler name="globalError_Handler" doc:id="ca0949b6-e6b1-4f4b-895f-b6c5db580b7e" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="44db46fe-1a46-421c-8142-dcbc50b5ec25" type="HTTP:TIMEOUT" >
+			<ee:transform doc:name="HTTP:TIMEOUT" doc:id="75c646b7-0b09-427c-8dd0-d8aeb77c0d43" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="Copy_of_On Error Propagate" doc:id="080e1d2f-2223-424b-944d-ab9e1d5ccf7f" type="ANY" >
+			<ee:transform doc:name="ANY" doc:id="a5bbd385-cc95-48e0-bec3-18f45e733356" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-propagate>
+	</error-handler>
+	
+</mule>

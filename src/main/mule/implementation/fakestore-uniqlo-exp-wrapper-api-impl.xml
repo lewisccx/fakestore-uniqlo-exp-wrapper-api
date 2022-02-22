@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getAllProducts-implFlow" doc:id="49233d47-a296-4255-96ac-ad2283dc4f02" >
+		<logger level="INFO" doc:name="Start get all products" doc:id="e79986df-1508-4b1e-803b-2be7bb742660" message="Start get all products" />
+		<set-variable value='#[message.attributes.queryParams.sort as String default "asc"]' doc:name="Set sort parameter" doc:id="68ae80ae-fef1-48e3-910c-7567f2dcb996" variableName="sort" />
+		<set-variable value="#[message.attributes.queryParams.limit as String default 20]" doc:name="Set limit parameter" doc:id="57408601-8d11-4dd9-b691-ef1b3329ae50" variableName="limit" />
+		<http:request method="GET" doc:name="Fakestore Uniqlo Proxy API" doc:id="8c7c8f07-8550-4794-9099-25fdda8e85f4" config-ref="Uniqlo_HTTP_Request_configuration" path="/products" responseTimeout="${http.timeout}" >
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"limit" : vars.limit,
+	"sort" : vars.sort
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="products" doc:id="24b4be2c-f453-4222-9abd-09327f95e304" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of get all products" doc:id="f5bf5be7-60dd-475f-b383-0f75ff756ca7" message="End of get all products"/>
+	</flow>
+	<flow name="getProductById-implFlow" doc:id="0660d012-84db-4a48-b73c-3cc144728854" >
+		<logger level="INFO" doc:name="Start get product by ID " doc:id="73e07d65-9556-46a7-8bb9-b1b771d68ff3" message="Start get product by ID " />
+		<set-variable value="#[attributes.uriParams.id]" doc:name="Set product ID" doc:id="5d60d8ae-c28c-4209-9f57-4cff90fdde04" variableName="productId" />
+		<http:request method="GET" doc:name="Fakestore Uniqlo Proxy API" doc:id="0aabf7e8-7732-44fd-8f68-4bfad4b2db75" config-ref="Uniqlo_HTTP_Request_configuration" path="/products/{id}" responseTimeout="${http.timeout}" >
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.productId
+}]]]></http:uri-params>
+		</http:request>
+		<ee:transform doc:name="product" doc:id="fb88c1a7-9f70-4fe4-ade4-27c0f402e779" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of get product by ID" doc:id="610d2b29-8546-490a-b6e9-b8d4ab729de1" message="End of get product by ID" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="93f0f58e-f643-4e13-af09-74bec744d1f9" type="HTTP:NOT_FOUND" >
+				<ee:transform doc:name="product not exists" doc:id="6942a5cd-fc58-4f3c-a16e-9e6ed6bad700" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "The product does not exists"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="200" doc:name="httpStatus" doc:id="08edfdd9-9acf-4d31-b54e-b7ea1ed94992" variableName="httpStatus" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="top10Products-implFlow" doc:id="7f1ffa69-9fd9-4989-93ac-97ea7f61d0ec" >
+		<logger level="INFO" doc:name="Start get top 10 products" doc:id="8811dfc7-0083-49c3-bee1-f0538312fc28" />
+		<http:request method="GET" doc:name="Fakestore Uniqlo Proxy API" doc:id="a3d7dbec-c68c-4f6d-b2f3-9739612c6f46" config-ref="Uniqlo_HTTP_Request_configuration" path="/products/top10" responseTimeout="${http.timeout}" />
+		<ee:transform doc:name="top 10 products" doc:id="456f5033-a6ff-4305-8af5-7b678d7c81c8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of get top 10 products" doc:id="f7b72f20-2d4b-493a-abe2-60290da8bc72" message="End of get top 10 products"/>
+	</flow>
+	<flow name="getAllCarts-implFlow" doc:id="4072ab75-f930-4e2c-8570-f36af29088fe">
+		<logger level="INFO" doc:name="Start get all carts" doc:id="d9efad2e-b4ad-4726-9cac-dd3db73df800" message="Start get all carts" />
+		<set-variable value="#[attributes.headers['client_id']]" doc:name="client_id" doc:id="6d08f127-e8e6-4e09-bb66-c6907aa14f9c" variableName="client_id" />
+		<set-variable value="#[attributes.headers['client_secret']]" doc:name="client_secret" doc:id="2b7c73bf-8935-4ad6-91c1-3f7ae1b77cbb" variableName="client_secret" />
+		<http:request method="GET" doc:name="Fakestore Uniqlo Proxy API" doc:id="aaabd315-6aaa-441b-bfc0-bda7ebfe507e" config-ref="Uniqlo_HTTP_Request_configuration" path="/carts" responseTimeout="${http.timeout}">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_secret" : attributes.headers['client_secret'],
+	"client_id" : attributes.headers['client_id']
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="carts" doc:id="9f52423a-5873-4aaa-8342-ee71b3ded2f4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of get all carts" doc:id="77d4ea66-78e4-400c-9b45-c7d73f697c70" message="End of get all carts" />
+	</flow>
+	<sub-flow name="setCartID" doc:id="5189d62d-80f4-43e8-88a9-f9cd4c65e726" >
+		<set-variable value="#[attributes.uriParams.id]" doc:name="set Cart ID" doc:id="f544add1-434e-4034-ab40-6167eea51824" variableName="cartId" />
+	</sub-flow>
+	<flow name="getCartById-implFlow" doc:id="051db270-b4c0-426a-869b-b02ff56eafd1" >
+		<logger level="INFO" doc:name="Start get cart by ID" doc:id="c3f2779f-daf2-4420-a1a8-3e4e2903e6d0" message="Start get cart by ID" />
+		<flow-ref doc:name="Set cart ID" doc:id="522828d6-e51d-4bdc-9f11-0d7dbee2d013" name="setCartID" />
+		<http:request method="GET" doc:name="Fakestore Uniqlo Proxy API" doc:id="b2fc30cf-9624-4765-aa19-ef46b2b0cd1b" config-ref="Uniqlo_HTTP_Request_configuration" path="/carts/{id}" responseTimeout="${http.timeout}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : attributes.headers['client_secret'],
+	"client_id" : attributes.headers['client_id']
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.cartId
+}]]]></http:uri-params>
+		</http:request>
+		<ee:transform doc:name="cart" doc:id="4ed0fd92-28ff-4fb7-821b-2d9754651154" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of get cart by ID" doc:id="a8f586d7-d6b9-452f-b0d7-4e5511857946" message="End of get cart by ID" />
+	</flow>
+	<flow name="updateCartByID-implFlow" doc:id="182d84cd-21b0-4057-b220-9f67af349f88" >
+		<logger level="INFO" doc:name="Start update cart by ID" doc:id="4da0880d-6e35-47e8-826e-d0c96b569200" message="Start update cart by ID"/>
+		<flow-ref doc:name="Set cart ID" doc:id="25dca341-53e9-43d0-879f-df07d4f1d6b9" name="setCartID" />
+		<http:request method="PUT" doc:name="Fakestore Uniqlo Proxy API" doc:id="8ae7fc1f-0d88-49a2-be4b-b3a90383f40d" config-ref="Uniqlo_HTTP_Request_configuration" path="/carts/{id}" responseTimeout="${http.timeout}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : attributes.headers['client_secret'],
+	"client_id" : attributes.headers['client_id']
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.cartId
+}]]]></http:uri-params>
+		</http:request>
+		<ee:transform doc:name="updated cart" doc:id="c7c92812-642b-43b4-b333-9a8d2d11649d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of update cart by ID" doc:id="8e2cee24-e3cb-4969-8cbd-96d6f0ef8a5f" message="End of update cart by ID" />
+	</flow>
+	<flow name="deleteCartById-implFlow" doc:id="16be54b6-8b7f-495f-941b-586da2e497b4" >
+		<logger level="INFO" doc:name="Start delete cart by ID" doc:id="4744f789-94d6-496d-9100-5476b0472b0d" message="Start delete cart by ID" />
+		<flow-ref doc:name="set Cart ID" doc:id="a4d4c62a-d166-411b-a4fd-7467db92119b" name="setCartID" />
+		<http:request method="DELETE" doc:name="Fakestore Uniqlo Proxy API" doc:id="5e4271bd-5c86-49b8-b9db-37780747dc15" config-ref="Uniqlo_HTTP_Request_configuration" path="/carts/{id}" responseTimeout="${http.timeout}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : attributes.headers['client_secret'],
+	"client_id" : attributes.headers['client_id']
+}]]]></http:headers>
+			<http:uri-params ><![CDATA[#[output application/java
+---
+{
+	"id" : vars.cartId
+}]]]></http:uri-params>
+		</http:request>
+		<ee:transform doc:name="deleted cart" doc:id="07b6562b-a4d2-4263-95a1-765323d12266" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of delete cart by ID" doc:id="2a0c00a1-50c1-4739-af0b-1b7b58ae33c1" message="End of delete cart by ID" />
+	</flow>
+	<flow name="createNewCart-implFlow" doc:id="319f63b2-5b29-4e50-9374-4fa75e95cc29" >
+		<logger level="INFO" doc:name="Start create new cart" doc:id="203064f4-cf37-4774-9671-aeee4b7ac1fb" message="Start create new cart"/>
+		<http:request method="POST" doc:name="Fakestore Uniqlo Proxy API" doc:id="969859e6-3874-4ea8-a4c5-bc4e5831fa15" config-ref="Uniqlo_HTTP_Request_configuration" path="/carts" responseTimeout="${http.timeout}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : attributes.headers['client_secret'],
+	"client_id" : attributes.headers['client_id']
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="new cart" doc:id="533a6005-0883-4940-a6e5-778790203744" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of create new cart" doc:id="5ed332b6-65bc-4c1e-9ff4-b4ddcdff5926" message="End of create new cart"/>
+	</flow>
+	<flow name="checkoutCart-implFlow" doc:id="a3103b9b-ce35-48ef-82ad-97dd64b48fe1" >
+		<logger level="INFO" doc:name="Start checkout cart" doc:id="9173e12e-110e-4426-938e-eaec9fa171e5" message="Start checkout cart" />
+		<http:request method="POST" doc:name="Fakestore Uniqlo Proxy API" doc:id="851f0472-847a-444d-8c4d-9c7f980decb3" config-ref="Uniqlo_HTTP_Request_configuration" path="/checkout" responseTimeout="${http.timeout}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : attributes.headers['client_secret'],
+	"client_id" : attributes.headers['client_id']
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="order" doc:id="e37f6640-0044-4dc1-87c3-26017f87e319" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End of checkout cart" doc:id="95091cf5-6d2e-4a0b-b4ce-a23b73bd4feb" message="End of checkout cart" />
+	</flow>
+</mule>

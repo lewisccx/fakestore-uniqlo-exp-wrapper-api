@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    
+    <flow name="fakestore-uniqlo-exp-wrapper-api-main">
+        <http:listener config-ref="fakestore-uniqlo-exp-wrapper-api-httpListenerConfig" path="/api/${layer}/${context}/${version}/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="fakestore-uniqlo-exp-wrapper-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform doc:name="Common Error">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform doc:name="Common Error">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[404]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform doc:name="Common Error">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[405]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform doc:name="Common Error">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[406]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform doc:name="Common Error">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[415]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform doc:name="Common Error">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus"><![CDATA[501]]></ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="88982f71-95f2-4969-9d35-71f21e7c2324" type="HTTP:UNAUTHORIZED">
+				<ee:transform doc:name="Common Error" doc:id="356b9a44-f4b0-43d4-b4b6-6d76f9c73ea4" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"header":{
+		"apiName": p('app.name'),
+		"apiVersion": p('version'),
+		"correlationId": correlationId,
+    }, 
+    "error": {
+		"description": error.description,
+		"status": error.errorType.identifier,
+		"invocationTimestamp": now()
+	}
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[501]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+				<set-variable value="401" doc:name="Set httpStatus" doc:id="c78bfe54-440f-41d5-b94d-b4c8917eeb6b" variableName="httpStatus"/>
+			</on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="fakestore-uniqlo-exp-wrapper-api-console">
+        <http:listener config-ref="fakestore-uniqlo-exp-wrapper-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="fakestore-uniqlo-exp-wrapper-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\carts\(id):application\json:fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="updateCartByID" doc:id="82c5c914-28fe-45c4-9133-df4b6c1105af" name="updateCartByID-implFlow"/>
+    </flow>
+    <flow name="delete:\carts\(id):fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="deleteCartById" doc:id="e83ee9fc-9409-473f-a489-6257204fb6bc" name="deleteCartById-implFlow"/>
+    </flow>
+    <flow name="get:\carts:fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="getAllCarts" doc:id="0e516357-d587-436f-ba52-59bc458a8d3b" name="getAllCarts-implFlow"/>
+    </flow>
+    <flow name="get:\products:fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="getAllProducts" doc:id="3e3ba2b3-bd7a-4ed5-8e8f-9ee16146ac1e" name="getAllProducts-implFlow"/>
+    </flow>
+    <flow name="get:\products\top10:fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="top10Products" doc:id="3faac729-a47b-4abb-820a-8df523758386" name="top10Products-implFlow"/>
+    </flow>
+    <flow name="get:\products\(id):fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="getProductById" doc:id="771fc4f0-efcd-4459-a9b1-65df317db9f4" name="getProductById-implFlow"/>
+    </flow>
+    <flow name="get:\carts\(id):fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="getCartById" doc:id="457bf6e1-b706-418a-a496-fec4101931d3" name="getCartById-implFlow"/>
+    </flow>
+    <flow name="post:\carts:application\json:fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="createNewCart" doc:id="846a6970-b9b6-4cc0-aee1-20a71286be2f" name="createNewCart-implFlow"/>
+    </flow>
+    <flow name="post:\checkout:application\json:fakestore-uniqlo-exp-wrapper-api-config">
+		<flow-ref doc:name="checkoutCart" doc:id="99661afb-8049-4bde-93eb-86fb96680014" name="checkoutCart-implFlow"/>
+    </flow>
+</mule>
