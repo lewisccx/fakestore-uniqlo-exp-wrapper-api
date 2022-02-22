@@ -64,7 +64,13 @@ output application/json
 	</flow>
 	<flow name="top10Products-implFlow" doc:id="7f1ffa69-9fd9-4989-93ac-97ea7f61d0ec" >
 		<logger level="INFO" doc:name="Start get top 10 products" doc:id="8811dfc7-0083-49c3-bee1-f0538312fc28" />
-		<http:request method="GET" doc:name="Fakestore Uniqlo Proxy API" doc:id="a3d7dbec-c68c-4f6d-b2f3-9739612c6f46" config-ref="Uniqlo_HTTP_Request_configuration" path="/products/top10" responseTimeout="${http.timeout}" />
+		<http:request method="GET" doc:name="Fakestore Uniqlo Proxy API" doc:id="a3d7dbec-c68c-4f6d-b2f3-9739612c6f46" config-ref="Uniqlo_HTTP_Request_configuration" path="/products/top10" responseTimeout="${http.timeout}" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/json"
+}]]]></http:headers>
+		</http:request>
 		<ee:transform doc:name="top 10 products" doc:id="456f5033-a6ff-4305-8af5-7b678d7c81c8" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0

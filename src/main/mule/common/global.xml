@@ -18,9 +18,6 @@ http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/m
 	</http:request-config>
 	<configuration-properties doc:name="Configuration properties" doc:id="4e180f77-3775-425f-aea5-69f8cbf340b4" file="config/${mule.env}.yaml" />
 	<api-gateway:autodiscovery apiId="${app.appId}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="6252f8d0-22d2-4c71-b476-299bf773d70e" flowRef="fakestore-uniqlo-exp-wrapper-api-main" />
-	<http:request-config name="Client_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="6ac99c6c-f902-4d5a-b6c5-bd2215063cdb" >
-		<http:request-connection host="${fakestoreuniqloapi.host2}" port="${fakestoreuniqloapi.port}" />
-	</http:request-config>
 	<error-handler name="globalError_Handler" doc:id="ca0949b6-e6b1-4f4b-895f-b6c5db580b7e" >
 		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="44db46fe-1a46-421c-8142-dcbc50b5ec25" type="HTTP:TIMEOUT" >
 			<ee:transform doc:name="HTTP:TIMEOUT" doc:id="75c646b7-0b09-427c-8dd0-d8aeb77c0d43" >
